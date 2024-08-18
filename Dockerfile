@@ -1,6 +1,5 @@
 # get the base shiny app
-
-FROM rocker/r-ver:4.3
+FROM rocker/r-ver:4.3.1
 
 
 # system libraries of general use
@@ -14,7 +13,8 @@ RUN apt-get update -qq && apt-get -y --no-install-recommends install \
     libssh2-1-dev \
     unixodbc-dev \
     libcurl4-openssl-dev \
-    libssl-dev 
+    libssl-dev \
+    libglpk-dev
 
 ## update system libraries
 RUN apt-get update && \
@@ -48,7 +48,7 @@ RUN R -e "renv::restore()"
 
 # copy necessary data
 RUN mkdir data
-COPY data/filtered_sce_object.rds data/filtered_sce_object.rds
+COPY data/filtered_seurat_object.rds data/filtered_seurat_object.rds
 COPY data/features.csv data/features.csv
 COPY app.R app.R
 COPY plot_theme.R plot_theme.R
@@ -59,6 +59,5 @@ USER decode_user
 
 # expose port on which app will run. 
 EXPOSE 5463
-
 
 CMD ["R", "-e", "shiny::runApp('/home/decode_user/app/app.R', host = '0.0.0.0', port = 5463)"]
