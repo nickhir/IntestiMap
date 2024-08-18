@@ -694,7 +694,7 @@ server <- function(input, output, session) {
         dim_red = "UMAP",
         split_conditions = "combined"
     ) +
-        ggtitle("Combined Dataset")) 
+        ggtitle("Combined Dataset"))
 
     output$feature_plot_rnai <- renderPlot(feature_plot_fun(seurat_RNAi,
         gene = "esg",
@@ -702,7 +702,7 @@ server <- function(input, output, session) {
         order_cells = TRUE,
         split_conditions = "combined"
     ) +
-        ggtitle("Combined Dataset")) 
+        ggtitle("Combined Dataset"))
 
     output$vln_expression_rnai <- renderPlot(jitter_plot_fun(seurat_RNAi,
         gene = "esg",
