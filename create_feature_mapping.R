@@ -1,5 +1,5 @@
 # wget https://ftp.flybase.net/releases/current/precomputed_files/genes/fbgn_annotation_ID.tsv.gz
-x<-data.table::fread("C:/Users/Nick/Rprojects/ShinyDECODE/data/fbgn_annotation_ID.tsv", header = T)[,c(1,3,4)]
+x <- data.table::fread("C:/Users/Nick/Rprojects/ShinyDECODE/data/fbgn_annotation_ID.tsv", header = T)[,c(1,3,4)]
 colnames(x)<- c("symbol","prim_id","second_id")
 
 df_long <- x %>%
