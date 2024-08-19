@@ -249,7 +249,7 @@ jitter_plot_fun <- function(srt, gene, celltypes, summary_stats, split_condition
 
 ui <- dashboardPage(
     dashboardHeader(
-        title = "", titleWidth = 120,
+        title = "", titleWidth = 143,
         # Set height of dashboardHeader
         tags$li(
             class = "dropdown",
@@ -263,15 +263,15 @@ ui <- dashboardPage(
         tags$style(".left-side, .main-sidebar {padding-top: 20px}"),
         sidebarMenu(
             menuItem("About", tabName = "about", icon = icon("fas fa-circle-info", class = "fa-lg")),
-            menuItem(HTML("<i>Notch<sup>sgRNAx2</i></sup><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dataset"),
+            menuItem(HTML("<i>Notch<sup>sgRNAx2</i></sup><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dataset"),
                 tabName = "dataset_notchKO", icon = icon("fas fa-magnifying-glass", class = "fa-lg")
             ),
-            menuItem(HTML("<i>Cph<sup>RNAi</i></sup><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dataset"),
+            menuItem(HTML("<i>Cph<sup>RNAi</i></sup>+<i>Notch<sup>RNAi</i></sup><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dataset"),
                 tabName = "dataset_RNAi", icon = icon("fas fa-magnifying-glass", class = "fa-lg")
             ),
             menuItem("Contact", tabName = "contact", icon = icon("far fa-address-book", class = "fa-lg"))
         ),
-        width = 120
+        width = 143
     ),
     dashboardBody(
         tags$style(
@@ -332,10 +332,9 @@ ui <- dashboardPage(
                 div(style = "margin-bottom: 30px;"), # Add a margin to create space
 
                 p(
-                    "This Shiny App allows users to interactively explore the dataset accompanying the publication mentioned above.",
+                    "This Shiny App allows users to interactively explore the datasets accompanying the publication.",
                     HTML("<br>"),
-                    "The source code for the app can be found on ", a("GitHub", href = "https://github.com/nickhir/scNotch_shiny"), ". The app is intended to be used in fullscreen on a 1920x1080 monitor."
-                )
+                    "The source code for the app can be found on ", a("GitHub", href = "https://github.com/nickhir/IntestiMap"), ".")
             ),
 
 
@@ -439,18 +438,18 @@ ui <- dashboardPage(
                 fluidRow(
                     style = "margin-top: -10px; padding: 0px",
                     box(
-                        title = "Expression across celltypes",
+                        title = "Expression across celltypes", 
                         plotOutput("vln_expression", height = 200),
                         status = "primary", solidHeader = TRUE, width = 8,
                         fluidRow(column(12,
                             align = "right", style = "margin-top: -205px; margin-right: -200",
                             downloadButton("download_vln_expression", label = NULL)
-                        ))
+                        )),
                     ),
                     box(
                         title = "Settings", status = "info", solidHeader = TRUE, width = 3,
                         div(
-                            style = "column-count: 3; margin-bottom: 15px",
+                            style = "column-count: 3; margin-bottom: 15px; ",
                             checkboxGroupInput("celltypes_vln_plot", "Available celltypes",
                                 choices = c(
                                     "ISC", "EB", "EEP", "dEC", "daEC", "aEC",
@@ -463,12 +462,12 @@ ui <- dashboardPage(
                             )
                         ),
                         div(
-                            style = "margin-bottom: 0px;",
+                            style = "margin-bottom: 0", # make box fit!
                             checkboxGroupInput("summary_stats", "Summary statistics",
                                 choices = c("Include mean", "Include median"),
                                 selected = "Include mean", inline = T
                             )
-                        )
+                        ),
                     )
                 )
             ),
@@ -476,59 +475,59 @@ ui <- dashboardPage(
             # RNAi dataset #
             ################
             tabItem(
-                tabName = "dataset_RNAi",
-                fluidRow(
-                    style = "margin-top: -10px; margin-bottom: -10px; padding: 0px",
-                    box(
-                        title = "Celltype annotation",
-                        plotOutput("annotation_plot_rnai", height = 290),
-                        status = "primary", solidHeader = TRUE, width = 4
-                    ),
-                    box(
-                        title = "Feature Expression",
-                        plotOutput("feature_plot_rnai", height = 290),
-                        status = "primary", solidHeader = TRUE, width = 4
-                    ),
-                    box(
-                        title = "Settings",
-                        div(
-                            style = "margin-bottom: 0px",
-                            selectizeInput("selected_gene_rnai", "Gene name",
-                                choices = c(rownames(seurat_RNAi), feature_mapping$FBid),
-                                options = list(
-                                    search_contains = TRUE,
-                                    dropdownParent = "body",
-                                    scoreThreshold = 1
-                                )
-                            )
-                        ),
-                        div(
-                            style = "margin-top: 10px",
-                            awesomeRadio("dim_reduction_rnai", HTML("Dimensionality reduction"), choices = c("UMAP", "PCA", "PHATE"), selected = "UMAP", inline = TRUE),
-                            column(
-                                style = "margin-left: -7px",
-                                width = 3, offset = 0,
-                                div(
-                                    prettyCheckbox("order_cells_rnai", "Order cells", TRUE),
-                                    prettyCheckbox("split_condition_rnai", "Split by condition", FALSE)
-                                )
-                            ),
-                            column(
-                                width = 1, offset = 7,
-                                icon("info-circle", class = "icon-info", id = "order_cells_info"),
-                                div(style = "margin-bottom: 15px;"),
-                                icon("info-circle", class = "icon-info", id = "split_condition_info")
-                            )
-                        ),
-                        actionButton("go_rnai", "Update All Plots!",
-                            icon = icon("fa-solid fa-gears", class = "fa-lg"),
-                            style = "font-weight: bold; background-color: #14E821; margin-top: 20px;"
-                        ),
-                        status = "info", solidHeader = TRUE, width = 3
-                    ),
-                    bsTooltip(id = "order_cells_info", title = "Should cells be plotted in order of expression?", placement = "right", trigger = "hover"),
-                    bsTooltip(id = "split_condition_info", title = "Create seperate plot for Ctrl and Notch-knockout condition?", placement = "right", trigger = "hover"),
+              tabName = "dataset_RNAi",
+              fluidRow(
+                style = "margin-top: -10px; margin-bottom: 10px; padding: 0px",
+                box(
+                  title = "Celltype annotation",
+                  plotOutput("annotation_plot_rnai", height = 290),
+                  status = "primary", solidHeader = TRUE, width = 4
                 ),
+                box(
+                  title = "Feature Expression",
+                  plotOutput("feature_plot_rnai", height = 290),
+                  status = "primary", solidHeader = TRUE, width = 4
+                ),
+                box(
+                  title = "Settings",
+                  div(
+                    style = "margin-bottom: 0px",
+                    selectizeInput("selected_gene_rnai", "Gene name",
+                                   choices = c(rownames(seurat_RNAi), feature_mapping$FBid),
+                                   options = list(
+                                     search_contains = TRUE,
+                                     dropdownParent = "body",
+                                     scoreThreshold = 1
+                                   )
+                    )
+                  ),
+                  div(
+                    style = "margin-top: 10px",
+                    awesomeRadio("dim_reduction_rnai", HTML("Dimensionality reduction"), choices = c("UMAP", "PCA", "PHATE"), selected = "UMAP", inline = TRUE),
+                    column(
+                      style = "margin-left: -7px",
+                      width = 3, offset = 0,
+                      div(
+                        prettyCheckbox("order_cells_rnai", "Order cells", TRUE),
+                        prettyCheckbox("split_condition_rnai", "Split by condition", FALSE)
+                      )
+                    ),
+                    column(
+                      width = 1, offset = 7,
+                      icon("info-circle", class = "icon-info", id = "order_cells_info"),
+                      div(style = "margin-bottom: 15px;"),
+                      icon("info-circle", class = "icon-info", id = "split_condition_info")
+                    )
+                  ),
+                  actionButton("go_rnai", "Update All Plots!",
+                               icon = icon("fa-solid fa-gears", class = "fa-lg"),
+                               style = "font-weight: bold; background-color: #14E821; margin-top: 20px;"
+                  ),
+                  status = "info", solidHeader = TRUE, width = 3
+                ),
+                bsTooltip(id = "order_cells_info", title = "Should cells be plotted in order of expression?", placement = "right", trigger = "hover"),
+                bsTooltip(id = "split_condition_info", title = "Create seperate plot for Ctrl and Notch-knockout condition?", placement = "right", trigger = "hover"),
+              ),
                 div(
                     style = "margin-top: 10px",
                     conditionalPanel(
@@ -538,12 +537,14 @@ ui <- dashboardPage(
                                 width = 4,
                                 title = "Celltype annotation",
                                 plotOutput("annotation_plot_cph_rnai", height = 290),
-                                status = "primary", solidHeader = TRUE
+                                status = "primary",
+                                solidHeader = TRUE
                             ),
                             box(
                                 width = 4, title = "Feature Expression",
                                 plotOutput("feature_plot_cph_rnai", height = 290),
-                                status = "primary", solidHeader = TRUE
+                                status = "primary",
+                                solidHeader = TRUE
                             )
                         )
                     )
@@ -557,12 +558,14 @@ ui <- dashboardPage(
                                 width = 4,
                                 title = "Celltype annotation",
                                 plotOutput("annotation_plot_notch_rnai", height = 290),
-                                status = "primary", solidHeader = TRUE
+                                status = "primary",
+                                solidHeader = TRUE
                             ),
                             box(
                                 width = 4, title = "Feature Expression",
                                 plotOutput("feature_plot_notch_rnai", height = 290),
-                                status = "primary", solidHeader = TRUE
+                                status = "primary",
+                                solidHeader = TRUE
                             )
                         )
                     )
@@ -572,10 +575,12 @@ ui <- dashboardPage(
                     box(
                         title = "Expression across celltypes",
                         plotOutput("vln_expression_rnai", height = 200),
-                        status = "primary", solidHeader = TRUE, width = 8,
+                        status = "primary",
+                        solidHeader = TRUE, width = 8,
                     ),
                     box(
-                        title = "Settings", status = "info", solidHeader = TRUE, width = 3,
+                        title = "Settings", solidHeader = TRUE, width = 3,
+                        status = "info",
                         div(
                             style = "column-count: 3; margin-bottom: 15px",
                             checkboxGroupInput("celltypes_vln_plot_rnai", "Available celltypes",
@@ -607,6 +612,7 @@ ui <- dashboardPage(
                 h2("Contact Information"),
                 p("If you have any questions or found a bug with the app, feel free to reach out to any of the
                 people listed below \U1F680."),
+                p("If you find any bugs or have feature requests feel free to post them on ", a("GitHub", href = "https://github.com/nickhir/IntestiMap/issues")),
                 div(style = "margin-bottom: 20px;"), # Add a margin to create space
                 h4("Joint first authors", style = "font-weight: bold;"),
                 p("Nick Hirschmüller,",
