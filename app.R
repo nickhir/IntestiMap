@@ -172,6 +172,11 @@ jitter_plot_fun <- function(srt, gene, celltypes, summary_stats, split_condition
     if (split_conditions == "combined") {
         p <- ggplot(plot_data, aes(x = celltype_manual, y = !!sym(gene), color = celltype_manual, fill = celltype_manual)) +
             geom_jitter(size = 0.65, stroke = 0.6, width = 0.2, shape = 21) +
+            geom_violin(
+              adjust = 1, trim = TRUE, color="black", show.legend = F,
+              scale = "width",  fill="#00000000", 
+              width=0.72 # adjust width so the violine does not stick out too much
+            ) +
             theme_Publication() +
             theme(
                 axis.title.x = element_blank(),
@@ -191,9 +196,15 @@ jitter_plot_fun <- function(srt, gene, celltypes, summary_stats, split_condition
                 stat_summary(fun = "median", geom = "point", color = "black", size = 3, shape = 2, stroke = 1.2)
         }
     } else if (split_conditions == "split") {
-        p <- ggplot(plot_data, aes(x = celltype_manual, y = !!sym(gene), color = perturbation, fill = perturbation)) +
-            geom_point(size = 0.65, stroke = 0.4, shape = 21, position = position_jitterdodge()) +
-            theme_Publication_side_legend() %+%
+        p <- ggplot(plot_data, aes(x = celltype_manual, y = !!sym(gene))) +
+            geom_point(mapping=aes(color = perturbation, fill = perturbation), size = 0.65, stroke = 0.4, shape = 21, position = position_jitterdodge()) +
+          geom_violin(
+            mapping=aes(fill=perturbation), 
+            adjust = 1, trim = TRUE, 
+            scale = "width",  show.legend = F,
+            width=0.72 # adjust width so the violine does not stick out too much
+          )+  
+          theme_Publication_side_legend() %+%
             theme(
                 axis.title.x = element_blank(),
                 legend.text = element_markdown(size = 15),

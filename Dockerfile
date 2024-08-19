@@ -49,6 +49,7 @@ RUN R -e "renv::restore()"
 # copy necessary data
 RUN mkdir data
 COPY data/filtered_seurat_object.rds data/filtered_seurat_object.rds
+COPY data/filtered_seurat_object_RNAi.rds data/filtered_seurat_object_rnai.rds
 COPY data/features.csv data/features.csv
 COPY app.R app.R
 COPY plot_theme.R plot_theme.R
