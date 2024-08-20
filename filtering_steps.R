@@ -3,7 +3,7 @@ library(here)
 library(Seurat)
 library(data.table)
 library(dplyr)
-
+library(Matrix)
 ###################
 # For the NotchKO #
 ###################
@@ -36,12 +36,16 @@ seurat_small <- DietSeurat(seurat,
 )
 
 
-# remove all genes that are not expressed
-seurat_small <- seurat_small[rowSums(seurat_small@assays$RNA@data) != 0, ]
+# remove all genes that are expressed in less than 15 cells
+seurat_small <- seurat_small[rowSums(seurat_small@assays$RNA@data > 0) >= 15, ]
 
-# remove the counts slot
-# Replace the counts slot with a sparse matrix of zeros of the same size
-seurat_small@assays$RNA@counts <- Matrix::Matrix(0, nrow = 13947, ncol = 29742, sparse = TRUE)
+
+# remove all counts, we will only work with normalized counts.
+# this saves a lot of space
+empty_matrix <- sparseMatrix(dims = c(nrow(seurat_small),ncol(seurat_small)), i={}, j={})
+empty_matrix <- as(empty_matrix, "dgCMatrix")
+dimnames(empty_matrix) <- dimnames(seurat_small)
+seurat_small <- SetAssayData(seurat_small, slot = "counts", new.data = empty_matrix)
 
 # only meta data that is relevant
 seurat_small@meta.data <- seurat_small@meta.data[, c("celltype_manual", "perturbation")]
@@ -91,12 +95,16 @@ seurat_small <- DietSeurat(seurat,
     misc = FALSE
 )
 
-# remove all genes that are not expressed
-seurat_small <- seurat_small[rowSums(seurat_small@assays$RNA@data) != 0, ]
+# remove all genes that are expressed in less than 15 cells
+seurat_small <- seurat_small[rowSums(seurat_small@assays$RNA@data > 0) >= 15, ]
 
-# remove the counts slot
-# Replace the counts slot with a sparse matrix of zeros of the same size
-seurat_small@assays$RNA@counts <- Matrix::Matrix(0, nrow = 11258, ncol = 17059, sparse = TRUE)
+# remove all counts, we will only work with normalized counts.
+# this saves a lot of space
+empty_matrix <- sparseMatrix(dims = c(nrow(seurat_small),ncol(seurat_small)), i={}, j={})
+empty_matrix <- as(empty_matrix, "dgCMatrix")
+dimnames(empty_matrix) <- dimnames(seurat_small)
+seurat_small <- SetAssayData(seurat_small, slot = "counts", new.data = empty_matrix)
+
 
 # only meta data that is relevant
 seurat_small@meta.data <- seurat_small@meta.data[, c("celltype_manual", "perturbation")]
@@ -106,6 +114,8 @@ all(Cells(seurat_small) == rownames(dim_data))
 # add the dimension data to the meta data
 seurat_small@meta.data <- cbind(seurat_small@meta.data, dim_data)
 
+seurat_small$perturbation <- factor(seurat_small$perturbation, levels = c("ctrl", "NotchRNAi", "NotchCphRNAi"))
+
 # change the gene name of cph
 rownames(seurat_small@assays$RNA@data) <-
     ifelse(rownames(seurat_small@assays$RNA@data) == "CG9650", "Cph", rownames(seurat_small@assays$RNA@data))
@@ -113,3 +123,4 @@ rownames(seurat_small@assays$RNA@counts) <-
     ifelse(rownames(seurat_small@assays$RNA@counts) == "CG9650", "Cph", rownames(seurat_small@assays$RNA@counts))
 
 saveRDS(seurat_small, here("data", "filtered_seurat_object_RNAi.rds"))
+

@@ -1,12 +1,18 @@
-# wget https://ftp.flybase.net/releases/current/precomputed_files/genes/fbgn_annotation_ID.tsv.gz
-x <- data.table::fread("C:/Users/Nick/Rprojects/ShinyDECODE/data/fbgn_annotation_ID.tsv", header = T)[, c(1, 3, 4)]
-colnames(x) <- c("symbol", "prim_id", "second_id")
+# this is returned by the cell ranger output
+x <- data.table::fread(here::here("data","features.tsv.gz"), header =F)[,1:2]
+colnames(x) <- c("fbid", "symbol")
 
-df_long <- x %>%
-    separate_rows(second_id, sep = ",", convert = T) %>%
-    pivot_longer(cols = c(prim_id, second_id), names_to = "Column", values_to = "CombinedID") %>%
-    select(symbol, FBid = CombinedID) %>%
-    distinct(FBid, .keep_all = T) %>%
-    filter(FBid != "")
 
-df_long %>% write.csv(., file = "C:/Users/Nick/Rprojects/ShinyDECODE/data/features.csv", row.names = F)
+# available gene names for which we need mapping:
+seurat <- readRDS(here::here("data", "filtered_seurat_object.rds"))
+seurat_RNAi <- readRDS(here::here("data", "filtered_seurat_object_RNAi.rds"))
+available_gene_names <- unique(c(rownames(seurat), rownames(seurat_RNAi)))
+
+# gene to id mapping
+mapping <- x %>% filter(symbol %in% available_gene_names)
+mapping %>% write.csv(., here("data","fbid_gene_mapping.csv"), row.names = F)
+
+
+
+
+
