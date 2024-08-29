@@ -9,6 +9,7 @@ library(Matrix)
 ###################
 seurat <- readRDS(here("data", "ctrl_notch_integrated_scent.rds"))
 
+
 # update the celltypes
 seurat@meta.data$celltype_manual <- ifelse(
     seurat$high_res_annotation == "EEP",
@@ -66,7 +67,7 @@ saveRDS(seurat_small, here("data", "filtered_seurat_object.rds"))
 ############################
 # For the RNAi Experiments #
 ############################
-seurat <- readRDS(here("data", "ctrl_notch_notchCphRNAi_without_3prime.rds"))
+seurat <- readRDS(here("data", "Ctrl_Notch_NotchCphRNAi_integrated_scent.rds"))
 
 # remove the unkonw cells
 seurat@meta.data$celltype_manual <- case_when(

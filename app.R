@@ -8,7 +8,7 @@ library(dplyr)
 library(Seurat)
 library(ggtext)
 
-# options(styler.addins_style_transformer = "styler::tidyverse_style(indent_by = 4L)")
+options(styler.addins_style_transformer = "styler::tidyverse_style(indent_by = 4L)")
 
 source(here::here("plot_theme.R"))
 
@@ -26,7 +26,7 @@ seurat <- readRDS(here::here("data", "filtered_seurat_object.rds"))
 seurat_RNAi <- readRDS(here::here("data", "filtered_seurat_object_RNAi.rds"))
 
 # see "create_feature_mapping" on details how this was created.
-feature_mapping <- read.csv(here::here("data", "fbid_gene_mapping.csv")) 
+feature_mapping <- read.csv(here::here("data", "fbid_gene_mapping.csv"))
 
 
 #############
@@ -35,258 +35,258 @@ feature_mapping <- read.csv(here::here("data", "fbid_gene_mapping.csv"))
 
 # this function returns the actual ggplot
 annotation_plot_call <- function(data, dimensions) {
-  ggplot(data, aes(x = !!sym(dimensions[1]), y = !!sym(dimensions[2]), color = celltype_manual)) +
-    geom_point(shape = ".") +
-    small_axis(substr(dimensions[1], 1, nchar(dimensions[1]) - 2), fontsize = 8, arrow_length = 20) +
-    theme(
-      legend.text = element_text(size = 13.5),
-      legend.key.height = unit(0.5, "cm"),
-      legend.key.width = unit(0.4, "cm"),
-      legend.title = element_blank()
-    ) +
-    scale_y_reverse() +
-    scale_color_manual(values = celltype_colors) +
-    guides(color = guide_legend(override.aes = list(size = 3, shape = 19)))
+    ggplot(data, aes(x = !!sym(dimensions[1]), y = !!sym(dimensions[2]), color = celltype_manual)) +
+        geom_point(shape = ".") +
+        small_axis(substr(dimensions[1], 1, nchar(dimensions[1]) - 2), fontsize = 8, arrow_length = 20) +
+        theme(
+            legend.text = element_text(size = 13.5),
+            legend.key.height = unit(0.5, "cm"),
+            legend.key.width = unit(0.4, "cm"),
+            legend.title = element_blank()
+        ) +
+        scale_y_reverse() +
+        scale_color_manual(values = celltype_colors) +
+        guides(color = guide_legend(override.aes = list(size = 3, shape = 19)))
 }
 
 # this function handles different cases and then calls `annotation_plot_call`.
 annotation_plot_fun <- function(srt, dim_red, split_conditions) {
-  if (dim_red == "PCA") {
-    dim_red <- "PC"
-  }
-  
-  dimensions <- c(paste0(dim_red, "_1"), paste0(dim_red, "_2"))
-  
-  # generate the plot
-  plot_data <- srt@meta.data[, c("celltype_manual", dimensions, "perturbation")] %>%
-    dplyr::sample_frac()
-  
-  if (split_conditions == "combined") {
-    p <- annotation_plot_call(plot_data, dimensions) +
-      ggtitle("Combined Dataset")
-    if (n_distinct(srt$perturbation) == 2) {
-      p <- p + scale_x_reverse()
+    if (dim_red == "PCA") {
+        dim_red <- "PC"
     }
-  } else if (split_conditions == "ctrl") {
-    p <- annotation_plot_call(plot_data %>% filter(perturbation == "ctrl"), dimensions) +
-      ggtitle("Control Condition") +
-      theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15))
-    
-    if (n_distinct(srt$perturbation) == 2) {
-      p <- p + scale_x_reverse()
+
+    dimensions <- c(paste0(dim_red, "_1"), paste0(dim_red, "_2"))
+
+    # generate the plot
+    plot_data <- srt@meta.data[, c("celltype_manual", dimensions, "perturbation")] %>%
+        dplyr::sample_frac()
+
+    if (split_conditions == "combined") {
+        p <- annotation_plot_call(plot_data, dimensions) +
+            ggtitle("Combined Dataset")
+        if (n_distinct(srt$perturbation) == 2) {
+            p <- p + scale_x_reverse()
+        }
+    } else if (split_conditions == "ctrl") {
+        p <- annotation_plot_call(plot_data %>% filter(perturbation == "ctrl"), dimensions) +
+            ggtitle("Control Condition") +
+            theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15))
+
+        if (n_distinct(srt$perturbation) == 2) {
+            p <- p + scale_x_reverse()
+        }
+    } else if (split_conditions == "notch") {
+        p <- annotation_plot_call(plot_data %>% filter(perturbation == "notch"), dimensions) +
+            ggtitle("*Notch*<sup><i>sgRNAx2</i></sup>") +
+            theme(plot.title = element_markdown(hjust = 0.5, face = "bold", size = 15)) +
+            scale_x_reverse()
+    } else if (split_conditions == "NotchRNAi") {
+        p <- annotation_plot_call(plot_data %>% filter(perturbation == "NotchRNAi"), dimensions) +
+            ggtitle("*Notch*<sup><i>RNAi</i></sup>") +
+            theme(plot.title = element_markdown(hjust = 0.5, face = "bold", size = 15))
+    } else if (split_conditions == "NotchCphRNAi") {
+        p <- annotation_plot_call(plot_data %>% filter(perturbation == "NotchCphRNAi"), dimensions) +
+            ggtitle("*Cph*<sup><i>RNAi</i></sup>+*Notch*<sup><i>RNAi</i></sup>") +
+            theme(plot.title = element_markdown(hjust = 0.5, face = "bold", size = 15))
     }
-  } else if (split_conditions == "notch") {
-    p <- annotation_plot_call(plot_data %>% filter(perturbation == "notch"), dimensions) +
-      ggtitle("*Notch*<sup><i>sgRNAx2</i></sup>") +
-      theme(plot.title = element_markdown(hjust = 0.5, face = "bold", size = 15)) +
-      scale_x_reverse()
-  } else if (split_conditions == "NotchRNAi") {
-    p <- annotation_plot_call(plot_data %>% filter(perturbation == "NotchRNAi"), dimensions) +
-      ggtitle("*Notch*<sup><i>RNAi</i></sup>") +
-      theme(plot.title = element_markdown(hjust = 0.5, face = "bold", size = 15))
-  } else if (split_conditions == "NotchCphRNAi") {
-    p <- annotation_plot_call(plot_data %>% filter(perturbation == "NotchCphRNAi"), dimensions) +
-      ggtitle("*Cph*<sup><i>RNAi</i></sup>+*Notch*<sup><i>RNAi</i></sup>") +
-      theme(plot.title = element_markdown(hjust = 0.5, face = "bold", size = 15))
-  }
-  return(p)
+    return(p)
 }
 
 # this function returns the actual ggplot
 feature_plot_call <- function(data, dimensions, gene) {
-  ggplot(data, aes(x = !!sym(dimensions[1]), y = !!sym(dimensions[2]), color = !!sym(gene))) +
-    geom_point(shape = ".") +
-    small_axis(substr(dimensions[1], 1, nchar(dimensions[1]) - 2), fontsize = 8, arrow_length = 20) +
-    scale_y_reverse() +
-    theme(
-      legend.key.width = unit(0.9, "line"),
-      legend.text = element_text(size = 9),
-      legend.key.height = unit(0.7, "line")
-    ) +
-    scale_color_gradient(
-      low = "lightgrey", high = "darkred",
-      name = "Expression\n(logcounts)\n"
-    )
+    ggplot(data, aes(x = !!sym(dimensions[1]), y = !!sym(dimensions[2]), color = !!sym(gene))) +
+        geom_point(shape = ".") +
+        small_axis(substr(dimensions[1], 1, nchar(dimensions[1]) - 2), fontsize = 8, arrow_length = 20) +
+        scale_y_reverse() +
+        theme(
+            legend.key.width = unit(0.9, "line"),
+            legend.text = element_text(size = 9),
+            legend.key.height = unit(0.7, "line")
+        ) +
+        scale_color_gradient(
+            low = "lightgrey", high = "darkred",
+            name = "Expression\n(logcounts)\n"
+        )
 }
 
 # this function handles different cases and then calls `feature_plot_call`.
 feature_plot_fun <- function(srt, gene, dim_red, order_cells, split_conditions) {
-  if (dim_red == "PCA") {
-    dim_red <- "PC"
-  }
-  dimensions <- c(paste0(dim_red, "_1"), paste0(dim_red, "_2"))
-  mdata <- srt@meta.data[, c("celltype_manual", dimensions, "perturbation")]
-  exp_data <- FetchData(srt, gene)
-  colnames(exp_data) <- gene
-  stopifnot(all(rownames(mdata) == rownames(exp_data)))
-  
-  plot_data <- cbind(mdata, exp_data)
-  
-  if (order_cells) {
-    plot_data <- plot_data %>%
-      dplyr::arrange(., !!sym(gene))
-  } else {
-    plot_data <- plot_data %>%
-      dplyr::sample_frac()
-  }
-  
-  if (split_conditions == "combined") {
-    p <- feature_plot_call(plot_data, dimensions, gene) +
-      ggtitle("Combined Dataset")
-    if (n_distinct(srt$perturbation) == 2) {
-      p <- p + scale_x_reverse()
+    if (dim_red == "PCA") {
+        dim_red <- "PC"
     }
-  } else if (split_conditions == "ctrl") {
-    p <- feature_plot_call(plot_data %>% filter(perturbation == "ctrl"), dimensions, gene) +
-      ggtitle("Control Condition") +
-      theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15))
-    if (n_distinct(srt$perturbation) == 2) {
-      p <- p + scale_x_reverse()
+    dimensions <- c(paste0(dim_red, "_1"), paste0(dim_red, "_2"))
+    mdata <- srt@meta.data[, c("celltype_manual", dimensions, "perturbation")]
+    exp_data <- FetchData(srt, gene)
+    colnames(exp_data) <- gene
+    stopifnot(all(rownames(mdata) == rownames(exp_data)))
+
+    plot_data <- cbind(mdata, exp_data)
+
+    if (order_cells) {
+        plot_data <- plot_data %>%
+            dplyr::arrange(., !!sym(gene))
+    } else {
+        plot_data <- plot_data %>%
+            dplyr::sample_frac()
     }
-  } else if (split_conditions == "notch") {
-    p <- feature_plot_call(plot_data %>% filter(perturbation == "notch"), dimensions, gene) +
-      ggtitle("*Notch*<sup><i>sgRNAx2</i></sup>") +
-      theme(plot.title = element_markdown(hjust = 0.5, face = "bold", size = 15)) +
-      scale_x_reverse()
-  } else if (split_conditions == "NotchRNAi") {
-    p <- feature_plot_call(plot_data %>% filter(perturbation == "NotchRNAi"), dimensions, gene) +
-      ggtitle("*Notch*<sup><i>RNAi</i></sup>") +
-      theme(plot.title = element_markdown(hjust = 0.5, face = "bold", size = 15))
-  } else if (split_conditions == "NotchCphRNAi") {
-    p <- feature_plot_call(plot_data %>% filter(perturbation == "NotchCphRNAi"), dimensions, gene) +
-      ggtitle("*Cph*<sup><i>RNAi</i></sup>+*Notch*<sup><i>RNAi</i></sup>") +
-      theme(plot.title = element_markdown(hjust = 0.5, face = "bold", size = 15))
-  }
-  return(p)
+
+    if (split_conditions == "combined") {
+        p <- feature_plot_call(plot_data, dimensions, gene) +
+            ggtitle("Combined Dataset")
+        if (n_distinct(srt$perturbation) == 2) {
+            p <- p + scale_x_reverse()
+        }
+    } else if (split_conditions == "ctrl") {
+        p <- feature_plot_call(plot_data %>% filter(perturbation == "ctrl"), dimensions, gene) +
+            ggtitle("Control Condition") +
+            theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15))
+        if (n_distinct(srt$perturbation) == 2) {
+            p <- p + scale_x_reverse()
+        }
+    } else if (split_conditions == "notch") {
+        p <- feature_plot_call(plot_data %>% filter(perturbation == "notch"), dimensions, gene) +
+            ggtitle("*Notch*<sup><i>sgRNAx2</i></sup>") +
+            theme(plot.title = element_markdown(hjust = 0.5, face = "bold", size = 15)) +
+            scale_x_reverse()
+    } else if (split_conditions == "NotchRNAi") {
+        p <- feature_plot_call(plot_data %>% filter(perturbation == "NotchRNAi"), dimensions, gene) +
+            ggtitle("*Notch*<sup><i>RNAi</i></sup>") +
+            theme(plot.title = element_markdown(hjust = 0.5, face = "bold", size = 15))
+    } else if (split_conditions == "NotchCphRNAi") {
+        p <- feature_plot_call(plot_data %>% filter(perturbation == "NotchCphRNAi"), dimensions, gene) +
+            ggtitle("*Cph*<sup><i>RNAi</i></sup>+*Notch*<sup><i>RNAi</i></sup>") +
+            theme(plot.title = element_markdown(hjust = 0.5, face = "bold", size = 15))
+    }
+    return(p)
 }
 
 jitter_plot_fun <- function(srt, gene, celltypes, summary_stats, split_conditions) {
-  mdata <- srt@meta.data[, c("celltype_manual", "perturbation")]
-  exp_data <- FetchData(srt, gene)
-  colnames(exp_data) <- gene
-  stopifnot(all(rownames(mdata) == rownames(exp_data)))
-  
-  plot_data <- cbind(mdata, exp_data) %>%
-    filter(celltype_manual %in% celltypes)
-  
-  if (split_conditions == "combined") {
-    p <- ggplot(plot_data, aes(x = celltype_manual, y = !!sym(gene), color = celltype_manual, fill = celltype_manual)) +
-      geom_jitter(size = 0.65, stroke = 0.6, width = 0.2, shape = 21) +
-      geom_violin(
-        adjust = 1, trim = TRUE, color="black", show.legend = F,
-        scale = "width",  fill="#00000000", 
-        width=0.72 # adjust width so the violine does not stick out too much
-      ) +
-      theme_Publication() +
-      theme(
-        axis.title.x = element_blank(),
-        legend.position = "none"
-      ) +
-      ylab("Expression\n(logcounts)") +
-      scale_color_manual(values = celltype_colors) +
-      scale_fill_manual(values = alpha(celltype_colors, 0.4)) +
-      scale_y_continuous(expand = expansion(mult = c(0, 0.08)))
-    
-    if (!is.null(summary_stats) & "Include mean" %in% summary_stats) {
-      p <- p +
-        stat_summary(fun = "mean", geom = "point", color = "black", size = 3, shape = 8, stroke = 1.2)
+    mdata <- srt@meta.data[, c("celltype_manual", "perturbation")]
+    exp_data <- FetchData(srt, gene)
+    colnames(exp_data) <- gene
+    stopifnot(all(rownames(mdata) == rownames(exp_data)))
+
+    plot_data <- cbind(mdata, exp_data) %>%
+        filter(celltype_manual %in% celltypes)
+
+    if (split_conditions == "combined") {
+        p <- ggplot(plot_data, aes(x = celltype_manual, y = !!sym(gene), color = celltype_manual, fill = celltype_manual)) +
+            geom_jitter(size = 0.65, stroke = 0.6, width = 0.2, shape = 21) +
+            geom_violin(
+                adjust = 1, trim = TRUE, color = "black", show.legend = F,
+                scale = "width", fill = "#00000000",
+                width = 0.72 # adjust width so the violine does not stick out too much
+            ) +
+            theme_Publication() +
+            theme(
+                axis.title.x = element_blank(),
+                legend.position = "none"
+            ) +
+            ylab("Expression\n(logcounts)") +
+            scale_color_manual(values = celltype_colors) +
+            scale_fill_manual(values = alpha(celltype_colors, 0.4)) +
+            scale_y_continuous(expand = expansion(mult = c(0, 0.08)))
+
+        if (!is.null(summary_stats) & "Include mean" %in% summary_stats) {
+            p <- p +
+                stat_summary(fun = "mean", geom = "point", color = "black", size = 3, shape = 8, stroke = 1.2)
+        }
+        if (!is.null(summary_stats) & "Include median" %in% summary_stats) {
+            p <- p +
+                stat_summary(fun = "median", geom = "point", color = "black", size = 3, shape = 2, stroke = 1.2)
+        }
+    } else if (split_conditions == "split") {
+        p <- ggplot(plot_data, aes(x = celltype_manual, y = !!sym(gene))) +
+            geom_point(mapping = aes(color = perturbation, fill = perturbation), size = 0.65, stroke = 0.4, shape = 21, position = position_jitterdodge()) +
+            geom_violin(
+                mapping = aes(fill = perturbation),
+                adjust = 1, trim = TRUE,
+                scale = "width", show.legend = F,
+                width = 0.72 # adjust width so the violine does not stick out too much
+            ) +
+            theme_Publication_side_legend() %+%
+            theme(
+                axis.title.x = element_blank(),
+                legend.text = element_markdown(size = 15),
+                legend.title = element_text(size = 16)
+            ) +
+            ylab("Expression\n(logcounts)") +
+            guides(
+                color = guide_legend(
+                    title = "Condition",
+                    override.aes = list(size = 2, alpha = 1, shape = NULL),
+                    hjust = 0
+                ),
+                fill = "none"
+            ) +
+            scale_y_continuous(expand = expansion(mult = c(0, 0.08)))
+
+        if (!is.null(summary_stats) & "Include mean" %in% summary_stats) {
+            p <- p +
+                stat_summary(fun = "mean", geom = "point", aes(group = perturbation), color = "black", size = 3, shape = 8, stroke = 1.2, position = position_dodge2(width = 0.75))
+        }
+        if (!is.null(summary_stats) & "Include median" %in% summary_stats) {
+            p <- p +
+                stat_summary(fun = "median", geom = "point", aes(group = perturbation), color = "black", size = 3, shape = 2, stroke = 1.2, position = position_dodge2(width = 0.75))
+        }
+        if (n_distinct(srt$perturbation) == 3) {
+            p <- p +
+                scale_color_manual(
+                    values = c("ctrl" = color_mapping[1], "NotchRNAi" = color_mapping[4], NotchCphRNAi = "#00ba38"),
+                    labels = c(
+                        ctrl = "Control",
+                        NotchRNAi = "*Notch*<sup><i>RNAi</i></sup>",
+                        NotchCphRNAi = "*Cph*<sup><i>RNAi</i></sup>+*Notch*<sup><i>RNAi</i></sup>"
+                    )
+                ) +
+                scale_fill_manual(values = alpha(c(color_mapping[1], color_mapping[4], "#00ba38"), 0.4))
+        } else if (n_distinct(srt$perturbation) == 2) {
+            p <- p +
+                scale_color_manual(
+                    values = c("ctrl" = color_mapping[1], "notch" = color_mapping[4]),
+                    labels = c(
+                        ctrl = "Control",
+                        notch = "*Notch*<sup><i>sgRNAx2</i></sup>"
+                    )
+                ) +
+                scale_fill_manual(values = alpha(c(color_mapping[1], color_mapping[4]), 0.4))
+        }
     }
-    if (!is.null(summary_stats) & "Include median" %in% summary_stats) {
-      p <- p +
-        stat_summary(fun = "median", geom = "point", color = "black", size = 3, shape = 2, stroke = 1.2)
-    }
-  } else if (split_conditions == "split") {
-    p <- ggplot(plot_data, aes(x = celltype_manual, y = !!sym(gene))) +
-      geom_point(mapping=aes(color = perturbation, fill = perturbation), size = 0.65, stroke = 0.4, shape = 21, position = position_jitterdodge()) +
-      geom_violin(
-        mapping=aes(fill=perturbation), 
-        adjust = 1, trim = TRUE, 
-        scale = "width",  show.legend = F,
-        width=0.72 # adjust width so the violine does not stick out too much
-      )+  
-      theme_Publication_side_legend() %+%
-      theme(
-        axis.title.x = element_blank(),
-        legend.text = element_markdown(size = 15),
-        legend.title = element_text(size = 16)
-      ) +
-      ylab("Expression\n(logcounts)") +
-      guides(
-        color = guide_legend(
-          title = "Condition",
-          override.aes = list(size = 2, alpha = 1, shape = NULL),
-          hjust = 0
-        ),
-        fill = "none"
-      ) +
-      scale_y_continuous(expand = expansion(mult = c(0, 0.08)))
-    
-    if (!is.null(summary_stats) & "Include mean" %in% summary_stats) {
-      p <- p +
-        stat_summary(fun = "mean", geom = "point", aes(group = perturbation), color = "black", size = 3, shape = 8, stroke = 1.2, position = position_dodge2(width = 0.75))
-    }
-    if (!is.null(summary_stats) & "Include median" %in% summary_stats) {
-      p <- p +
-        stat_summary(fun = "median", geom = "point", aes(group = perturbation), color = "black", size = 3, shape = 2, stroke = 1.2, position = position_dodge2(width = 0.75))
-    }
-    if (n_distinct(srt$perturbation) == 3) {
-      p <- p +
-        scale_color_manual(
-          values = c("ctrl" = color_mapping[1], "NotchRNAi" = color_mapping[4], NotchCphRNAi = "#00ba38"),
-          labels = c(
-            ctrl = "Control",
-            NotchRNAi = "*Notch*<sup><i>RNAi</i></sup>",
-            NotchCphRNAi = "*Cph*<sup><i>RNAi</i></sup>+*Notch*<sup><i>RNAi</i></sup>"
-          )
-        ) +
-        scale_fill_manual(values = alpha(c(color_mapping[1], color_mapping[4], "#00ba38"), 0.4))
-    } else if (n_distinct(srt$perturbation) == 2) {
-      p <- p +
-        scale_color_manual(
-          values = c("ctrl" = color_mapping[1], "notch" = color_mapping[4]),
-          labels = c(
-            ctrl = "Control",
-            notch = "*Notch*<sup><i>sgRNAx2</i></sup>"
-          )
-        ) +
-        scale_fill_manual(values = alpha(c(color_mapping[1], color_mapping[4]), 0.4))
-    }
-  }
-  
-  
-  return(p +
-           ggtitle(gene))
+
+
+    return(p +
+        ggtitle(gene))
 }
 
 ui <- dashboardPage(
-  dashboardHeader(
-    title = "", titleWidth = 143,
-    # Set height of dashboardHeader
-    tags$li(
-      class = "dropdown",
-      tags$style(".main-header {max-height: 20px}"),
-      tags$style(".main-header .logo {height: 20px;}"),
-      tags$style(".sidebar-toggle {height: 20px; padding-top: 1px !important;}"),
-      tags$style(".navbar {min-height:20px !important}")
-    )
-  ),
-  dashboardSidebar(
-    tags$style(".left-side, .main-sidebar {padding-top: 20px}"),
-    sidebarMenu(
-      menuItem("About", tabName = "about", icon = icon("fas fa-circle-info", class = "fa-lg")),
-      menuItem(HTML("<i>Notch<sup>sgRNAx2</i></sup><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dataset"),
-               tabName = "dataset_notchKO", icon = icon("fas fa-magnifying-glass", class = "fa-lg")
-      ),
-      menuItem(HTML("<i>Cph<sup>RNAi</i></sup>+<i>Notch<sup>RNAi</i></sup><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dataset"),
-               tabName = "dataset_RNAi", icon = icon("fas fa-magnifying-glass", class = "fa-lg")
-      ),
-      menuItem("Contact", tabName = "contact", icon = icon("far fa-address-book", class = "fa-lg"))
+    dashboardHeader(
+        title = "", titleWidth = 143,
+        # Set height of dashboardHeader
+        tags$li(
+            class = "dropdown",
+            tags$style(".main-header {max-height: 20px}"),
+            tags$style(".main-header .logo {height: 20px;}"),
+            tags$style(".sidebar-toggle {height: 20px; padding-top: 1px !important;}"),
+            tags$style(".navbar {min-height:20px !important}")
+        )
     ),
-    width = 143
-  ),
-  dashboardBody(
-    tags$style(
-      HTML("
+    dashboardSidebar(
+        tags$style(".left-side, .main-sidebar {padding-top: 20px}"),
+        sidebarMenu(
+            menuItem("About", tabName = "about", icon = icon("fas fa-circle-info", class = "fa-lg")),
+            menuItem(HTML("<i>Notch<sup>sgRNAx2</i></sup><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dataset"),
+                tabName = "dataset_notchKO", icon = icon("fas fa-magnifying-glass", class = "fa-lg")
+            ),
+            menuItem(HTML("<i>Cph<sup>RNAi</i></sup>+<i>Notch<sup>RNAi</i></sup><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dataset"),
+                tabName = "dataset_RNAi", icon = icon("fas fa-magnifying-glass", class = "fa-lg")
+            ),
+            menuItem("Contact", tabName = "contact", icon = icon("far fa-address-book", class = "fa-lg"))
+        ),
+        width = 143
+    ),
+    dashboardBody(
+        tags$style(
+            HTML("
            .col-sm-4 {
              padding: 5px !important; /* Adjust padding value as needed */
            }
@@ -313,352 +313,351 @@ ui <- dashboardPage(
            height: 5px;
            }
            ")
-    ),
-    tabItems(
-      #############
-      # ABOUT TAB #
-      #############
-      tabItem(
-        tabName = "about",
-        h4("Single cell profiling of notch mutant intestinal tumors reveals
-                 Chronophage as a novel transcription factor involved in stem
-                 cell proliferation and differentiation",
-           align = "center",
-           style = "width: 80%;  margin: 0 auto; font-weight: bold; font-style: italic;"
         ),
-        div(style = "margin-bottom: 10px;"), # Add a margin to create space
-        
-        h5(HTML("Author*, Author*, Shivohum Bahuguna,
-              Svenja Leible, Michaela Holzem, Tianyu Wang, Fillip Port,
-              Lea Bräckow, Wolfgang Huber<sup>#</sup>, Michael Boutros<sup>#</sup>"),
-           align = "center",
-           style = "width: 60%;  margin: 0 auto; color: darkgrey;"
-        ),
-        div(style = "margin-bottom: 5px;"), # Add a margin to create space
-        
-        h6("*Contributed equally | #Co-Corresponding",
-           align = "center",
-           style = "width: 80%;  margin: 0 auto; color: darkgrey;"
-        ),
-        div(style = "margin-bottom: 30px;"), # Add a margin to create space
-        
-        p(
-          "This Shiny App allows users to interactively explore the datasets accompanying the publication.",
-          HTML("<br>"),
-          "The source code for the app can be found on ", a("GitHub", href = "https://github.com/nickhir/IntestiMap"), ".")
-      ),
-      
-      
-      
-      ###########
-      # NotchKO #
-      ###########
-      tabItem(
-        tabName = "dataset_notchKO",
-        fluidRow(
-          style = "margin-top: -10px; margin-bottom: -10px; padding: 0px",
-          box(
-            title = "Celltype annotation",
-            plotOutput("annotation_plot", height = 290),
-            fluidRow(column(12,
+        tabItems(
+            #############
+            # ABOUT TAB #
+            #############
+            tabItem(
+                tabName = "about",
+                h4("The zinc finger transcription factor BCL11/Chronophage defines a critical time window for proliferation and fate determination in intestinal stem cells",
+                    align = "center",
+                    style = "width: 80%;  margin: 0 auto; font-weight: bold; font-style: italic;"
+                ),
+                div(style = "margin-bottom: 10px;"), # Add a margin to create space
+
+                h5(HTML("Siamak Redhai*<sup>#</sup>, Nick Hirschmüller*, Tianyu Wang, Shivohum Bahuguna,
+              Svenja Leible, Stefan Peidli, Erica Valentani1, Sviat Kharuk, Michaela Holemz, Lea Bräckow,
+                        Fillip Port, David Ibberson, Wolfgang Huber<sup>#</sup>, Michael Boutros<sup>#</sup>"),
+                    align = "center",
+                    style = "width: 60%;  margin: 0 auto; color: darkgrey;"
+                ),
+                div(style = "margin-bottom: 5px;"), # Add a margin to create space
+
+                h6("*Contributed equally | #Co-Corresponding",
+                    align = "center",
+                    style = "width: 80%;  margin: 0 auto; color: darkgrey;"
+                ),
+                div(style = "margin-bottom: 30px;"), # Add a margin to create space
+
+                p(
+                    "This Shiny App allows users to interactively explore the datasets accompanying the publication.",
+                    HTML("<br>"),
+                    "The source code for the app can be found on ", a("GitHub", href = "https://github.com/nickhir/IntestiMap"), "."
+                )
+            ),
+
+
+
+            ###########
+            # NotchKO #
+            ###########
+            tabItem(
+                tabName = "dataset_notchKO",
+                fluidRow(
+                    style = "margin-top: -10px; margin-bottom: -10px; padding: 0px",
+                    box(
+                        title = "Celltype annotation",
+                        plotOutput("annotation_plot", height = 290),
+                        fluidRow(column(12,
                             align = "right", style = "margin-top: -295px; margin-right: -200",
                             downloadButton("download_annotation_plot", label = NULL)
-            )),
-            status = "primary", solidHeader = TRUE, width = 4
-          ),
-          box(
-            title = "Feature Expression",
-            plotOutput("feature_plot", height = 290),
-            fluidRow(column(12,
+                        )),
+                        status = "primary", solidHeader = TRUE, width = 4
+                    ),
+                    box(
+                        title = "Feature Expression",
+                        plotOutput("feature_plot", height = 290),
+                        fluidRow(column(12,
                             align = "right", style = "margin-top: -295px; margin-right: -200",
                             downloadButton("download_feature_plot", label = NULL)
-            )),
-            status = "primary", solidHeader = TRUE, width = 4
-          ),
-          box(
-            title = "Settings",
-            div(
-              style = "margin-bottom: 0px",
-              selectizeInput("selected_gene", "Gene name",
-                             choices = c(rownames(seurat), feature_mapping$fbid),
-                             options = list(
-                               search_contains = TRUE,
-                               dropdownParent = "body",
-                               scoreThreshold = 1
-                             )
-              )
-            ),
-            div(
-              style = "margin-top: 10px",
-              awesomeRadio("dim_reduction", HTML("Dimensionality reduction"), choices = c("UMAP", "PCA", "PHATE"), selected = "UMAP", inline = TRUE),
-              column(
-                style = "margin-left: -7px",
-                width = 3, offset = 0,
+                        )),
+                        status = "primary", solidHeader = TRUE, width = 4
+                    ),
+                    box(
+                        title = "Settings",
+                        div(
+                            style = "margin-bottom: 0px",
+                            selectizeInput("selected_gene", "Gene name",
+                                choices = c(rownames(seurat), feature_mapping$fbid),
+                                options = list(
+                                    search_contains = TRUE,
+                                    dropdownParent = "body",
+                                    scoreThreshold = 1
+                                )
+                            )
+                        ),
+                        div(
+                            style = "margin-top: 10px",
+                            awesomeRadio("dim_reduction", HTML("Dimensionality reduction"), choices = c("UMAP", "PCA", "PHATE"), selected = "UMAP", inline = TRUE),
+                            column(
+                                style = "margin-left: -7px",
+                                width = 3, offset = 0,
+                                div(
+                                    prettyCheckbox("order_cells", "Order cells", TRUE),
+                                    prettyCheckbox("split_condition", "Split by condition", FALSE)
+                                )
+                            ),
+                            column(
+                                width = 1, offset = 7,
+                                icon("info-circle", class = "icon-info", id = "order_cells_info"),
+                                div(style = "margin-bottom: 15px;"),
+                                icon("info-circle", class = "icon-info", id = "split_condition_info")
+                            )
+                        ),
+                        actionButton("go", "Update All Plots!",
+                            icon = icon("fa-solid fa-gears", class = "fa-lg"),
+                            style = "font-weight: bold; background-color: #14E821; margin-top: 20px;"
+                        ),
+                        status = "info", solidHeader = TRUE, width = 3
+                    ),
+                    bsTooltip(id = "order_cells_info", title = "Should cells be plotted in order of expression?", placement = "right", trigger = "hover"),
+                    bsTooltip(id = "split_condition_info", title = "Create seperate plot for Ctrl and Notch-knockout condition?", placement = "right", trigger = "hover"),
+                ),
                 div(
-                  prettyCheckbox("order_cells", "Order cells", TRUE),
-                  prettyCheckbox("split_condition", "Split by condition", FALSE)
-                )
-              ),
-              column(
-                width = 1, offset = 7,
-                icon("info-circle", class = "icon-info", id = "order_cells_info"),
-                div(style = "margin-bottom: 15px;"),
-                icon("info-circle", class = "icon-info", id = "split_condition_info")
-              )
-            ),
-            actionButton("go", "Update All Plots!",
-                         icon = icon("fa-solid fa-gears", class = "fa-lg"),
-                         style = "font-weight: bold; background-color: #14E821; margin-top: 20px;"
-            ),
-            status = "info", solidHeader = TRUE, width = 3
-          ),
-          bsTooltip(id = "order_cells_info", title = "Should cells be plotted in order of expression?", placement = "right", trigger = "hover"),
-          bsTooltip(id = "split_condition_info", title = "Create seperate plot for Ctrl and Notch-knockout condition?", placement = "right", trigger = "hover"),
-        ),
-        div(
-          style = "margin-top: 10px",
-          conditionalPanel(
-            condition = "input.split_condition",
-            fluidRow(
-              box(
-                width = 4,
-                title = "Celltype annotation",
-                plotOutput("annotation_plot_split", height = 290),
-                fluidRow(
-                  column(12,
-                         align = "right", style = "margin-top: -295px; margin-right: -200",
-                         downloadButton("download_annotation_plot_split", label = NULL)
-                  )
+                    style = "margin-top: 10px",
+                    conditionalPanel(
+                        condition = "input.split_condition",
+                        fluidRow(
+                            box(
+                                width = 4,
+                                title = "Celltype annotation",
+                                plotOutput("annotation_plot_split", height = 290),
+                                fluidRow(
+                                    column(12,
+                                        align = "right", style = "margin-top: -295px; margin-right: -200",
+                                        downloadButton("download_annotation_plot_split", label = NULL)
+                                    )
+                                ),
+                                status = "primary", solidHeader = TRUE
+                            ),
+                            box(
+                                width = 4, title = "Feature Expression",
+                                plotOutput("feature_plot_split", height = 290),
+                                fluidRow(
+                                    column(12,
+                                        align = "right", style = "margin-top: -295px; margin-right: -200",
+                                        downloadButton("download_feature_plot_split", label = NULL)
+                                    )
+                                ),
+                                status = "primary", solidHeader = TRUE
+                            )
+                        )
+                    )
                 ),
-                status = "primary", solidHeader = TRUE
-              ),
-              box(
-                width = 4, title = "Feature Expression",
-                plotOutput("feature_plot_split", height = 290),
                 fluidRow(
-                  column(12,
-                         align = "right", style = "margin-top: -295px; margin-right: -200",
-                         downloadButton("download_feature_plot_split", label = NULL)
-                  )
-                ),
-                status = "primary", solidHeader = TRUE
-              )
-            )
-          )
-        ),
-        fluidRow(
-          style = "margin-top: -10px; padding: 0px",
-          box(
-            title = "Expression across celltypes", 
-            plotOutput("vln_expression", height = 200),
-            status = "primary", solidHeader = TRUE, width = 8,
-            fluidRow(column(12,
+                    style = "margin-top: -10px; padding: 0px",
+                    box(
+                        title = "Expression across celltypes",
+                        plotOutput("vln_expression", height = 200),
+                        status = "primary", solidHeader = TRUE, width = 8,
+                        fluidRow(column(12,
                             align = "right", style = "margin-top: -205px; margin-right: -200",
                             downloadButton("download_vln_expression", label = NULL)
-            )),
-          ),
-          box(
-            title = "Settings", status = "info", solidHeader = TRUE, width = 3,
-            div(
-              style = "column-count: 3; margin-bottom: 15px; ",
-              checkboxGroupInput("celltypes_vln_plot", "Available celltypes",
-                                 choices = c(
-                                   "ISC", "EB", "EEP", "dEC", "daEC", "aEC",
-                                   "mEC", "Copper", "LFC", "pEC", "EE", "MT"
-                                 ),
-                                 selected = c(
-                                   "ISC", "EB", "EEP", "dEC", "daEC", "aEC",
-                                   "mEC", "Copper", "LFC", "pEC", "EE"
-                                 )
-              )
-            ),
-            div(
-              style = "margin-bottom: 0", # make box fit!
-              checkboxGroupInput("summary_stats", "Summary statistics",
-                                 choices = c("Include mean", "Include median"),
-                                 selected = "Include mean", inline = T
-              )
-            ),
-          )
-        )
-      ),
-      ################
-      # RNAi dataset #
-      ################
-      tabItem(
-        tabName = "dataset_RNAi",
-        fluidRow(
-          style = "margin-top: -10px; margin-bottom: 10px; padding: 0px",
-          box(
-            title = "Celltype annotation",
-            plotOutput("annotation_plot_rnai", height = 290),
-            status = "primary", solidHeader = TRUE, width = 4
-          ),
-          box(
-            title = "Feature Expression",
-            plotOutput("feature_plot_rnai", height = 290),
-            status = "primary", solidHeader = TRUE, width = 4
-          ),
-          box(
-            title = "Settings",
-            div(
-              style = "margin-bottom: 0px",
-              selectizeInput("selected_gene_rnai", "Gene name",
-                             choices = c(rownames(seurat_RNAi), feature_mapping$fbid),
-                             options = list(
-                               search_contains = TRUE,
-                               dropdownParent = "body",
-                               scoreThreshold = 1
-                             )
-              )
-            ),
-            div(
-              style = "margin-top: 10px",
-              awesomeRadio("dim_reduction_rnai", HTML("Dimensionality reduction"), choices = c("UMAP", "PCA", "PHATE"), selected = "UMAP", inline = TRUE),
-              column(
-                style = "margin-left: -7px",
-                width = 3, offset = 0,
-                div(
-                  prettyCheckbox("order_cells_rnai", "Order cells", TRUE),
-                  prettyCheckbox("split_condition_rnai", "Split by condition", FALSE)
+                        )),
+                    ),
+                    box(
+                        title = "Settings", status = "info", solidHeader = TRUE, width = 3,
+                        div(
+                            style = "column-count: 3; margin-bottom: 15px; ",
+                            checkboxGroupInput("celltypes_vln_plot", "Available celltypes",
+                                choices = c(
+                                    "ISC", "EB", "EEP", "dEC", "daEC", "aEC",
+                                    "mEC", "Copper", "LFC", "pEC", "EE", "MT"
+                                ),
+                                selected = c(
+                                    "ISC", "EB", "EEP", "dEC", "daEC", "aEC",
+                                    "mEC", "Copper", "LFC", "pEC", "EE"
+                                )
+                            )
+                        ),
+                        div(
+                            style = "margin-bottom: 0", # make box fit!
+                            checkboxGroupInput("summary_stats", "Summary statistics",
+                                choices = c("Include mean", "Include median"),
+                                selected = "Include mean", inline = T
+                            )
+                        ),
+                    )
                 )
-              ),
-              column(
-                width = 1, offset = 7,
-                icon("info-circle", class = "icon-info", id = "order_cells_info"),
-                div(style = "margin-bottom: 15px;"),
-                icon("info-circle", class = "icon-info", id = "split_condition_info")
-              )
             ),
-            actionButton("go_rnai", "Update All Plots!",
-                         icon = icon("fa-solid fa-gears", class = "fa-lg"),
-                         style = "font-weight: bold; background-color: #14E821; margin-top: 20px;"
+            ################
+            # RNAi dataset #
+            ################
+            tabItem(
+                tabName = "dataset_RNAi",
+                fluidRow(
+                    style = "margin-top: -10px; margin-bottom: 10px; padding: 0px",
+                    box(
+                        title = "Celltype annotation",
+                        plotOutput("annotation_plot_rnai", height = 290),
+                        status = "primary", solidHeader = TRUE, width = 4
+                    ),
+                    box(
+                        title = "Feature Expression",
+                        plotOutput("feature_plot_rnai", height = 290),
+                        status = "primary", solidHeader = TRUE, width = 4
+                    ),
+                    box(
+                        title = "Settings",
+                        div(
+                            style = "margin-bottom: 0px",
+                            selectizeInput("selected_gene_rnai", "Gene name",
+                                choices = c(rownames(seurat_RNAi), feature_mapping$fbid),
+                                options = list(
+                                    search_contains = TRUE,
+                                    dropdownParent = "body",
+                                    scoreThreshold = 1
+                                )
+                            )
+                        ),
+                        div(
+                            style = "margin-top: 10px",
+                            awesomeRadio("dim_reduction_rnai", HTML("Dimensionality reduction"), choices = c("UMAP", "PCA", "PHATE"), selected = "UMAP", inline = TRUE),
+                            column(
+                                style = "margin-left: -7px",
+                                width = 3, offset = 0,
+                                div(
+                                    prettyCheckbox("order_cells_rnai", "Order cells", TRUE),
+                                    prettyCheckbox("split_condition_rnai", "Split by condition", FALSE)
+                                )
+                            ),
+                            column(
+                                width = 1, offset = 7,
+                                icon("info-circle", class = "icon-info", id = "order_cells_info"),
+                                div(style = "margin-bottom: 15px;"),
+                                icon("info-circle", class = "icon-info", id = "split_condition_info")
+                            )
+                        ),
+                        actionButton("go_rnai", "Update All Plots!",
+                            icon = icon("fa-solid fa-gears", class = "fa-lg"),
+                            style = "font-weight: bold; background-color: #14E821; margin-top: 20px;"
+                        ),
+                        status = "info", solidHeader = TRUE, width = 3
+                    ),
+                    bsTooltip(id = "order_cells_info", title = "Should cells be plotted in order of expression?", placement = "right", trigger = "hover"),
+                    bsTooltip(id = "split_condition_info", title = "Create seperate plot for Ctrl and Notch-knockout condition?", placement = "right", trigger = "hover"),
+                ),
+                div(
+                    style = "margin-top: 10px",
+                    conditionalPanel(
+                        condition = "input.split_condition_rnai",
+                        fluidRow(
+                            box(
+                                width = 4,
+                                title = "Celltype annotation",
+                                plotOutput("annotation_plot_cph_rnai", height = 290),
+                                status = "primary",
+                                solidHeader = TRUE
+                            ),
+                            box(
+                                width = 4, title = "Feature Expression",
+                                plotOutput("feature_plot_cph_rnai", height = 290),
+                                status = "primary",
+                                solidHeader = TRUE
+                            )
+                        )
+                    )
+                ),
+                div(
+                    style = "margin-top: 10px",
+                    conditionalPanel(
+                        condition = "input.split_condition_rnai",
+                        fluidRow(
+                            box(
+                                width = 4,
+                                title = "Celltype annotation",
+                                plotOutput("annotation_plot_notch_rnai", height = 290),
+                                status = "primary",
+                                solidHeader = TRUE
+                            ),
+                            box(
+                                width = 4, title = "Feature Expression",
+                                plotOutput("feature_plot_notch_rnai", height = 290),
+                                status = "primary",
+                                solidHeader = TRUE
+                            )
+                        )
+                    )
+                ),
+                fluidRow(
+                    style = "margin-top: -10px; padding: 0px",
+                    box(
+                        title = "Expression across celltypes",
+                        plotOutput("vln_expression_rnai", height = 200),
+                        status = "primary",
+                        solidHeader = TRUE, width = 8,
+                    ),
+                    box(
+                        title = "Settings", solidHeader = TRUE, width = 3,
+                        status = "info",
+                        div(
+                            style = "column-count: 3; margin-bottom: 15px",
+                            checkboxGroupInput("celltypes_vln_plot_rnai", "Available celltypes",
+                                choices = c(
+                                    "ISC", "EB", "EEP", "dEC", "daEC", "aEC",
+                                    "mEC", "Copper", "LFC", "pEC", "EE", "MT"
+                                ),
+                                selected = c(
+                                    "ISC", "EB", "EEP", "dEC", "daEC", "aEC",
+                                    "mEC", "Copper", "LFC", "pEC", "EE"
+                                )
+                            )
+                        ),
+                        div(
+                            style = "margin-bottom: 0px;",
+                            checkboxGroupInput("summary_stats_rnai", "Summary statistics",
+                                choices = c("Include mean", "Include median"),
+                                selected = "Include mean", inline = T
+                            )
+                        )
+                    )
+                )
             ),
-            status = "info", solidHeader = TRUE, width = 3
-          ),
-          bsTooltip(id = "order_cells_info", title = "Should cells be plotted in order of expression?", placement = "right", trigger = "hover"),
-          bsTooltip(id = "split_condition_info", title = "Create seperate plot for Ctrl and Notch-knockout condition?", placement = "right", trigger = "hover"),
-        ),
-        div(
-          style = "margin-top: 10px",
-          conditionalPanel(
-            condition = "input.split_condition_rnai",
-            fluidRow(
-              box(
-                width = 4,
-                title = "Celltype annotation",
-                plotOutput("annotation_plot_cph_rnai", height = 290),
-                status = "primary",
-                solidHeader = TRUE
-              ),
-              box(
-                width = 4, title = "Feature Expression",
-                plotOutput("feature_plot_cph_rnai", height = 290),
-                status = "primary",
-                solidHeader = TRUE
-              )
+            ###############
+            # CONTACT TAB #
+            ###############
+            tabItem(
+                tabName = "contact",
+                h2("Contact Information"),
+                p("If you have any questions about the publication or Shiny app, feel free to reach out to any of the people listed below \U1F680."),
+                p("In case you find any bugs or have feature requests feel free to post them on ", a("GitHub", href = "https://github.com/nickhir/IntestiMap/issues")),
+                div(style = "margin-bottom: 20px;"), # Add a margin to create space
+                h4("Joint first authors", style = "font-weight: bold;"),
+                p("Siamak Redhai,",
+                    a("siamak.redhai@dkfz-heidelberg.de", href = "mailto:siamak.redhai@dkfz-heidelberg.de"),
+                    ",",
+                    a("German Cancer Research Center (DKFZ)", href = "https://www.dkfz.de/en/index.html"),
+                    style = "margin-bottom: 3px;"
+                ),
+                p("Nick Hirschmüller,",
+                  a("nh608@cam.ac.uk", href = "mailto:nh608@cam.ac.uk"),
+                  ",",
+                  a("University of Cambridge", href = "https://www.cam.ac.uk/"),
+                  style = "margin-bottom: 3px;"
+                ),
+                h4("Corresponding authors", style = "font-weight: bold;"),
+                p("Siamak Redhai,",
+                    a("siamak.redhai@dkfz-heidelberg.de", href = "mailto:siamak.redhai@dkfz-heidelberg.de"),
+                    ",",
+                    a("German Cancer Research Center (DKFZ)", href = "https://www.dkfz.de/en/index.html"),
+                    style = "margin-bottom: 3px;"
+                ),
+                p("Michael Boutros,",
+                    a("m.boutros@dkfz-heidelberg.de", href = "mailto:m.boutros@dkfz-heidelberg.de"),
+                    ",",
+                    a("German Cancer Research Center (DKFZ)", href = "https://www.dkfz.de/en/index.html"),
+                    style = "margin-bottom: 3px;"
+                ),
+                p("Wolfgang Huber,",
+                    a("wolfgang.huber@embl.org", href = "mailto:wolfgang.huber@embl.org"),
+                    ",",
+                    a("European Molecular Biology Laboratory (EMBL)", href = "https://www.embl.org/"),
+                    style = "margin-bottom: 3px;"
+                ),
             )
-          )
-        ),
-        div(
-          style = "margin-top: 10px",
-          conditionalPanel(
-            condition = "input.split_condition_rnai",
-            fluidRow(
-              box(
-                width = 4,
-                title = "Celltype annotation",
-                plotOutput("annotation_plot_notch_rnai", height = 290),
-                status = "primary",
-                solidHeader = TRUE
-              ),
-              box(
-                width = 4, title = "Feature Expression",
-                plotOutput("feature_plot_notch_rnai", height = 290),
-                status = "primary",
-                solidHeader = TRUE
-              )
-            )
-          )
-        ),
-        fluidRow(
-          style = "margin-top: -10px; padding: 0px",
-          box(
-            title = "Expression across celltypes",
-            plotOutput("vln_expression_rnai", height = 200),
-            status = "primary",
-            solidHeader = TRUE, width = 8,
-          ),
-          box(
-            title = "Settings", solidHeader = TRUE, width = 3,
-            status = "info",
-            div(
-              style = "column-count: 3; margin-bottom: 15px",
-              checkboxGroupInput("celltypes_vln_plot_rnai", "Available celltypes",
-                                 choices = c(
-                                   "ISC", "EB", "EEP", "dEC", "daEC", "aEC",
-                                   "mEC", "Copper", "LFC", "pEC", "EE", "MT"
-                                 ),
-                                 selected = c(
-                                   "ISC", "EB", "EEP", "dEC", "daEC", "aEC",
-                                   "mEC", "Copper", "LFC", "pEC", "EE"
-                                 )
-              )
-            ),
-            div(
-              style = "margin-bottom: 0px;",
-              checkboxGroupInput("summary_stats_rnai", "Summary statistics",
-                                 choices = c("Include mean", "Include median"),
-                                 selected = "Include mean", inline = T
-              )
-            )
-          )
         )
-      ),
-      ###############
-      # CONTACT TAB #
-      ###############
-      tabItem(
-        tabName = "contact",
-        h2("Contact Information"),
-        p("If you have any questions about the publication or Shiny app, feel free to reach out to any of the people listed below \U1F680."),
-        p("In case you find any bugs or have feature requests feel free to post them on ", a("GitHub", href = "https://github.com/nickhir/IntestiMap/issues")),
-        div(style = "margin-bottom: 20px;"), # Add a margin to create space
-        h4("Joint first authors", style = "font-weight: bold;"),
-        p("Nick Hirschmüller,",
-          a("nh608@cam.ac.uk", href = "mailto:nh608@cam.ac.uk"),
-          ",",
-          a("University of Cambridge", href = "https://www.cam.ac.uk/"),
-          style = "margin-bottom: 3px;"
-        ),
-        p("Siamak Redhai,",
-          a("siamak.redhai@dkfz-heidelberg.de", href = "mailto:siamak.redhai@dkfz-heidelberg.de"),
-          ",",
-          a("German Cancer Research Center (DKFZ)", href = "https://www.dkfz.de/en/index.html"),
-          style = "margin-bottom: 3px;"
-        ),
-        h4("Corresponding authors", style = "font-weight: bold;"),
-        p("Siamak Redhai,",
-          a("siamak.redhai@dkfz-heidelberg.de", href = "mailto:siamak.redhai@dkfz-heidelberg.de"),
-          ",",
-          a("German Cancer Research Center (DKFZ)", href = "https://www.dkfz.de/en/index.html"),
-          style = "margin-bottom: 3px;"
-        ),
-        p("Michael Boutros,",
-          a("m.boutros@dkfz-heidelberg.de", href = "mailto:m.boutros@dkfz-heidelberg.de"),
-          ",",
-          a("German Cancer Research Center (DKFZ)", href = "https://www.dkfz.de/en/index.html"),
-          style = "margin-bottom: 3px;"
-        ),
-        p("Wolfgang Huber,",
-          a("wolfgang.huber@embl.org", href = "mailto:wolfgang.huber@embl.org"),
-          ",",
-          a("European Molecular Biology Laboratory (EMBL)", href = "https://www.embl.org/"),
-          style = "margin-bottom: 3px;"
-        ),
-      )
     )
-  )
 )
 
 
@@ -669,384 +668,384 @@ ui <- dashboardPage(
 # SERVER #
 ##########
 server <- function(input, output, session) {
-  # server side selection
-  updateSelectizeInput(session, "selected_gene",
-                       choices = c(rownames(seurat), feature_mapping$fbid), server = TRUE,
-                       selected = "Cph"
-  )
-  
-  updateSelectizeInput(session, "selected_gene_rnai",
-                       choices = c(rownames(seurat), feature_mapping$fbid), server = TRUE,
-                       selected = "esg"
-  )
-  
-  
-  # By default, we load some standard plots. So the user sees something upon startup
-  output$annotation_plot <- renderPlot(annotation_plot_fun(seurat,
-                                                           dim_red = "UMAP",
-                                                           split_conditions = "combined"
-  ) +
-    ggtitle("Combined Dataset"))
-  
-  output$feature_plot <- renderPlot(feature_plot_fun(seurat,
-                                                     gene = "Cph",
-                                                     dim_red = "UMAP",
-                                                     order_cells = TRUE,
-                                                     split_conditions = "combined"
-  ) +
-    ggtitle("Combined Dataset"))
-  
-  output$vln_expression <- renderPlot(jitter_plot_fun(seurat,
-                                                      gene = "Cph",
-                                                      celltypes = c(
-                                                        "ISC", "EB", "EEP", "dEC", "daEC", "aEC",
-                                                        "mEC", "Copper", "LFC", "pEC", "EE"
-                                                      ),
-                                                      summary_stats = "Include mean",
-                                                      split_conditions = "combined"
-  ))
-  
-  output$annotation_plot_rnai <- renderPlot(annotation_plot_fun(seurat_RNAi,
-                                                                dim_red = "UMAP",
-                                                                split_conditions = "combined"
-  ) +
-    ggtitle("Combined Dataset"))
-  
-  output$feature_plot_rnai <- renderPlot(feature_plot_fun(seurat_RNAi,
-                                                          gene = "esg",
-                                                          dim_red = "UMAP",
-                                                          order_cells = TRUE,
-                                                          split_conditions = "combined"
-  ) +
-    ggtitle("Combined Dataset"))
-  
-  output$vln_expression_rnai <- renderPlot(jitter_plot_fun(seurat_RNAi,
-                                                           gene = "esg",
-                                                           celltypes = c(
-                                                             "ISC", "EB", "EEP", "dEC", "daEC", "aEC",
-                                                             "mEC", "Copper", "LFC", "pEC", "EE"
-                                                           ),
-                                                           summary_stats = "Include mean",
-                                                           split_conditions = "combined"
-  ))
-  
-  ##################
-  # NOTCH KO PLOTS #
-  ##################
-  observeEvent(input$go, {
-    dim_red <- input$dim_reduction
-    order_cells <- input$order_cells
-    celltypes <- input$celltypes_vln_plot
-    gene_name <- input$selected_gene
-    # if the user selected a flybase gene id, we map it to the symbol
-    if (grepl("FBgn\\d+", gene_name)) {
-      gene_name <- feature_mapping %>%
-        filter(fbid == gene_name) %>%
-        pull(symbol)
-    }
-    summary_stats <- input$summary_stats
-    split_condition <- input$split_condition
-    
-    if (!split_condition) {
-      ###################
-      # ANNOTATION PLOT #
-      ###################
-      output$annotation_plot <- renderPlot(annotation_plot_fun(seurat, dim_red = dim_red, split_conditions = "combined")) %>%
-        bindCache(dim_red, "combined", cache = "session")
-      
-      
-      #################
-      # Feature PLOT #
-      ################
-      output$feature_plot <- renderPlot(feature_plot_fun(seurat,
-                                                         gene = gene_name,
-                                                         dim_red = dim_red,
-                                                         order_cells = order_cells,
-                                                         split_conditions = "combined"
-      )) %>%
-        bindCache(dim_red, gene_name, order_cells, "combined", cache = "session")
-      
-      
-      
-      ################
-      # Violin PLOT #
-      ###############
-      output$vln_expression <- renderPlot(jitter_plot_fun(seurat,
-                                                          gene = gene_name,
-                                                          celltypes = celltypes,
-                                                          summary_stats = summary_stats,
-                                                          split_conditions = "combined"
-      )) %>%
-        bindCache(celltypes, gene_name, summary_stats, "combined", cache = "session")
-    }
-    
-    # if split condition, generate different plots
-    if (split_condition) {
-      ###################
-      # ANNOTATION PLOT #
-      ###################
-      output$annotation_plot <- renderPlot(annotation_plot_fun(seurat, dim_red = dim_red, split_conditions = "ctrl")) %>%
-        bindCache(dim_red, "ctrl", cache = "session")
-      
-      output$annotation_plot_split <- renderPlot(annotation_plot_fun(seurat, dim_red = dim_red, split_conditions = "notch")) %>%
-        bindCache(dim_red, "notch", cache = "session")
-      
-      #################
-      # Feature PLOT #
-      ################
-      output$feature_plot <- renderPlot(feature_plot_fun(seurat,
-                                                         gene = gene_name,
-                                                         dim_red = dim_red,
-                                                         order_cells = order_cells,
-                                                         split_conditions = "ctrl"
-      )) %>%
-        bindCache(dim_red, gene_name, order_cells, "ctrl", cache = "session")
-      
-      output$feature_plot_split <- renderPlot(feature_plot_fun(seurat,
-                                                               gene = gene_name,
-                                                               dim_red = dim_red,
-                                                               order_cells = order_cells,
-                                                               split_conditions = "notch"
-      )) %>%
-        bindCache(dim_red, gene_name, order_cells, "notch", cache = "session")
-      
-      ################
-      # Violin PLOT #
-      ###############
-      output$vln_expression <- renderPlot(jitter_plot_fun(seurat,
-                                                          gene = gene_name,
-                                                          celltypes = celltypes,
-                                                          summary_stats = summary_stats,
-                                                          split_conditions = "split"
-      )) %>%
-        bindCache(celltypes, gene_name, summary_stats, "split", cache = "session")
-    }
-  })
-  
-  ##############
-  # RNAi PLOTS #
-  ##############
-  observeEvent(input$go_rnai, {
-    dim_red_rnai <- input$dim_reduction_rnai
-    order_cells_rnai <- input$order_cells_rnai
-    celltypes_rnai <- input$celltypes_vln_plot_rnai
-    gene_name_rnai <- input$selected_gene_rnai
-    # if the user selected a flybase gene id, we map it to the symbol
-    if (grepl("FBgn\\d+", gene_name_rnai)) {
-      gene_name_rnai <- feature_mapping %>%
-        filter(fbid == gene_name_rnai) %>%
-        pull(symbol)
-    }
-    summary_stats_rnai <- input$summary_stats_rnai
-    split_condition_rnai <- input$split_condition_rnai
-    
-    if (!split_condition_rnai) {
-      ###################
-      # ANNOTATION PLOT #
-      ###################
-      output$annotation_plot_rnai <- renderPlot(annotation_plot_fun(seurat_RNAi, dim_red = dim_red_rnai, split_conditions = "combined"))
-      
-      
-      #################
-      # Feature PLOT #
-      ################
-      output$feature_plot_rnai <- renderPlot(feature_plot_fun(seurat_RNAi,
-                                                              gene = gene_name_rnai,
-                                                              dim_red = dim_red_rnai,
-                                                              order_cells = order_cells_rnai,
-                                                              split_conditions = "combined"
-      ))
-      
-      
-      
-      ################
-      # Violin PLOT #
-      ###############
-      output$vln_expression_rnai <- renderPlot(jitter_plot_fun(seurat_RNAi,
-                                                               gene = gene_name_rnai,
-                                                               celltypes = celltypes_rnai,
-                                                               summary_stats = summary_stats_rnai,
-                                                               split_conditions = "combined"
-      ))
-    }
-    
-    # if split condition, generate different plots
-    if (split_condition_rnai) {
-      ###################
-      # ANNOTATION PLOT #
-      ###################
-      output$annotation_plot_rnai <- renderPlot(annotation_plot_fun(seurat_RNAi, dim_red = dim_red_rnai, split_conditions = "ctrl"))
-      
-      output$annotation_plot_cph_rnai <- renderPlot(annotation_plot_fun(seurat_RNAi, dim_red = dim_red_rnai, split_conditions = "NotchCphRNAi"))
-      
-      output$annotation_plot_notch_rnai <- renderPlot(annotation_plot_fun(seurat_RNAi, dim_red = dim_red_rnai, split_conditions = "NotchRNAi"))
-      
-      #################
-      # Feature PLOT #
-      ################
-      output$feature_plot_rnai <- renderPlot(feature_plot_fun(seurat_RNAi,
-                                                              gene = gene_name_rnai,
-                                                              dim_red = dim_red_rnai,
-                                                              order_cells = order_cells_rnai,
-                                                              split_conditions = "ctrl"
-      ))
-      
-      output$feature_plot_cph_rnai <- renderPlot(feature_plot_fun(seurat_RNAi,
-                                                                  gene = gene_name_rnai,
-                                                                  dim_red = dim_red_rnai,
-                                                                  order_cells = order_cells_rnai,
-                                                                  split_conditions = "NotchCphRNAi"
-      ))
-      
-      output$feature_plot_notch_rnai <- renderPlot(feature_plot_fun(seurat_RNAi,
-                                                                    gene = gene_name_rnai,
-                                                                    dim_red = dim_red_rnai,
-                                                                    order_cells = order_cells_rnai,
-                                                                    split_conditions = "NotchRNAi"
-      ))
-      
-      
-      ################
-      # Violin PLOT #
-      ###############
-      output$vln_expression_rnai <- renderPlot(jitter_plot_fun(seurat_RNAi,
-                                                               gene = gene_name_rnai,
-                                                               celltypes = celltypes_rnai,
-                                                               summary_stats = summary_stats_rnai,
-                                                               split_conditions = "split"
-      ))
-    }
-  })
-  
-  
-  
-  
-  #################
-  # DownloadCalls #
-  #################
-  observe({
-    if (!input$split_condition) {
-      output$download_annotation_plot <- downloadHandler(
-        filename = function() {
-          paste0("annotation_", input$dim_reduction, ".pdf")
-        },
-        content = function(file) {
-          pdf(file, width = 7.31, height = 5.61)
-          print(annotation_plot_fun(seurat,
-                                    dim_red = input$dim_reduction,
-                                    split_conditions = "combined"
-          ))
-          dev.off()
+    # server side selection
+    updateSelectizeInput(session, "selected_gene",
+        choices = c(rownames(seurat), feature_mapping$fbid), server = TRUE,
+        selected = "Cph"
+    )
+
+    updateSelectizeInput(session, "selected_gene_rnai",
+        choices = c(rownames(seurat), feature_mapping$fbid), server = TRUE,
+        selected = "esg"
+    )
+
+
+    # By default, we load some standard plots. So the user sees something upon startup
+    output$annotation_plot <- renderPlot(annotation_plot_fun(seurat,
+        dim_red = "UMAP",
+        split_conditions = "combined"
+    ) +
+        ggtitle("Combined Dataset"))
+
+    output$feature_plot <- renderPlot(feature_plot_fun(seurat,
+        gene = "Cph",
+        dim_red = "UMAP",
+        order_cells = TRUE,
+        split_conditions = "combined"
+    ) +
+        ggtitle("Combined Dataset"))
+
+    output$vln_expression <- renderPlot(jitter_plot_fun(seurat,
+        gene = "Cph",
+        celltypes = c(
+            "ISC", "EB", "EEP", "dEC", "daEC", "aEC",
+            "mEC", "Copper", "LFC", "pEC", "EE"
+        ),
+        summary_stats = "Include mean",
+        split_conditions = "combined"
+    ))
+
+    output$annotation_plot_rnai <- renderPlot(annotation_plot_fun(seurat_RNAi,
+        dim_red = "UMAP",
+        split_conditions = "combined"
+    ) +
+        ggtitle("Combined Dataset"))
+
+    output$feature_plot_rnai <- renderPlot(feature_plot_fun(seurat_RNAi,
+        gene = "esg",
+        dim_red = "UMAP",
+        order_cells = TRUE,
+        split_conditions = "combined"
+    ) +
+        ggtitle("Combined Dataset"))
+
+    output$vln_expression_rnai <- renderPlot(jitter_plot_fun(seurat_RNAi,
+        gene = "esg",
+        celltypes = c(
+            "ISC", "EB", "EEP", "dEC", "daEC", "aEC",
+            "mEC", "Copper", "LFC", "pEC", "EE"
+        ),
+        summary_stats = "Include mean",
+        split_conditions = "combined"
+    ))
+
+    ##################
+    # NOTCH KO PLOTS #
+    ##################
+    observeEvent(input$go, {
+        dim_red <- input$dim_reduction
+        order_cells <- input$order_cells
+        celltypes <- input$celltypes_vln_plot
+        gene_name <- input$selected_gene
+        # if the user selected a flybase gene id, we map it to the symbol
+        if (grepl("FBgn\\d+", gene_name)) {
+            gene_name <- feature_mapping %>%
+                filter(fbid == gene_name) %>%
+                pull(symbol)
         }
-      )
-      
-      output$download_feature_plot <- downloadHandler(
-        filename = function() {
-          paste0("feature_expression_", input$selected_gene, ".pdf")
-        },
-        content = function(file) {
-          pdf(file, width = 7.31, height = 5.61)
-          print(feature_plot_fun(seurat,
-                                 gene = input$selected_gene,
-                                 dim_red = input$dim_reduction,
-                                 order_cells = input$order_cells,
-                                 split_conditions = "combined"
-          ))
-          dev.off()
+        summary_stats <- input$summary_stats
+        split_condition <- input$split_condition
+
+        if (!split_condition) {
+            ###################
+            # ANNOTATION PLOT #
+            ###################
+            output$annotation_plot <- renderPlot(annotation_plot_fun(seurat, dim_red = dim_red, split_conditions = "combined")) %>%
+                bindCache(dim_red, "combined", cache = "session")
+
+
+            #################
+            # Feature PLOT #
+            ################
+            output$feature_plot <- renderPlot(feature_plot_fun(seurat,
+                gene = gene_name,
+                dim_red = dim_red,
+                order_cells = order_cells,
+                split_conditions = "combined"
+            )) %>%
+                bindCache(dim_red, gene_name, order_cells, "combined", cache = "session")
+
+
+
+            ################
+            # Violin PLOT #
+            ###############
+            output$vln_expression <- renderPlot(jitter_plot_fun(seurat,
+                gene = gene_name,
+                celltypes = celltypes,
+                summary_stats = summary_stats,
+                split_conditions = "combined"
+            )) %>%
+                bindCache(celltypes, gene_name, summary_stats, "combined", cache = "session")
         }
-      )
-      
-      output$download_vln_expression <- downloadHandler(
-        filename = function() {
-          paste0("celltype_expression_", input$selected_gene, ".pdf")
-        },
-        content = function(file) {
-          p <- jitter_plot_fun(seurat,
-                               gene = input$selected_gene,
-                               celltypes = input$celltypes_vln_plot,
-                               summary_stats = input$summary_stats,
-                               split_conditions = "combined"
-          )
-          ggsave(filename = file, width = 7, height = 2.5, plot = p, scale = 1.4)
+
+        # if split condition, generate different plots
+        if (split_condition) {
+            ###################
+            # ANNOTATION PLOT #
+            ###################
+            output$annotation_plot <- renderPlot(annotation_plot_fun(seurat, dim_red = dim_red, split_conditions = "ctrl")) %>%
+                bindCache(dim_red, "ctrl", cache = "session")
+
+            output$annotation_plot_split <- renderPlot(annotation_plot_fun(seurat, dim_red = dim_red, split_conditions = "notch")) %>%
+                bindCache(dim_red, "notch", cache = "session")
+
+            #################
+            # Feature PLOT #
+            ################
+            output$feature_plot <- renderPlot(feature_plot_fun(seurat,
+                gene = gene_name,
+                dim_red = dim_red,
+                order_cells = order_cells,
+                split_conditions = "ctrl"
+            )) %>%
+                bindCache(dim_red, gene_name, order_cells, "ctrl", cache = "session")
+
+            output$feature_plot_split <- renderPlot(feature_plot_fun(seurat,
+                gene = gene_name,
+                dim_red = dim_red,
+                order_cells = order_cells,
+                split_conditions = "notch"
+            )) %>%
+                bindCache(dim_red, gene_name, order_cells, "notch", cache = "session")
+
+            ################
+            # Violin PLOT #
+            ###############
+            output$vln_expression <- renderPlot(jitter_plot_fun(seurat,
+                gene = gene_name,
+                celltypes = celltypes,
+                summary_stats = summary_stats,
+                split_conditions = "split"
+            )) %>%
+                bindCache(celltypes, gene_name, summary_stats, "split", cache = "session")
         }
-      )
-    } else {
-      output$download_annotation_plot <- downloadHandler(
-        filename = function() {
-          paste0("annotation_", input$dim_reduction, ".pdf")
-        },
-        content = function(file) {
-          pdf(file, width = 7.31, height = 5.61)
-          print(annotation_plot_fun(seurat,
-                                    dim_red = input$dim_reduction,
-                                    split_conditions = "ctrl"
-          ))
-          dev.off()
+    })
+
+    ##############
+    # RNAi PLOTS #
+    ##############
+    observeEvent(input$go_rnai, {
+        dim_red_rnai <- input$dim_reduction_rnai
+        order_cells_rnai <- input$order_cells_rnai
+        celltypes_rnai <- input$celltypes_vln_plot_rnai
+        gene_name_rnai <- input$selected_gene_rnai
+        # if the user selected a flybase gene id, we map it to the symbol
+        if (grepl("FBgn\\d+", gene_name_rnai)) {
+            gene_name_rnai <- feature_mapping %>%
+                filter(fbid == gene_name_rnai) %>%
+                pull(symbol)
         }
-      )
-      
-      output$download_feature_plot <- downloadHandler(
-        filename = function() {
-          paste0("feature_expression_", input$selected_gene, ".pdf")
-        },
-        content = function(file) {
-          pdf(file, width = 7.31, height = 5.61)
-          print(feature_plot_fun(seurat,
-                                 gene = input$selected_gene,
-                                 dim_red = input$dim_reduction,
-                                 order_cells = input$order_cells,
-                                 split_conditions = "ctrl"
-          ))
-          dev.off()
+        summary_stats_rnai <- input$summary_stats_rnai
+        split_condition_rnai <- input$split_condition_rnai
+
+        if (!split_condition_rnai) {
+            ###################
+            # ANNOTATION PLOT #
+            ###################
+            output$annotation_plot_rnai <- renderPlot(annotation_plot_fun(seurat_RNAi, dim_red = dim_red_rnai, split_conditions = "combined"))
+
+
+            #################
+            # Feature PLOT #
+            ################
+            output$feature_plot_rnai <- renderPlot(feature_plot_fun(seurat_RNAi,
+                gene = gene_name_rnai,
+                dim_red = dim_red_rnai,
+                order_cells = order_cells_rnai,
+                split_conditions = "combined"
+            ))
+
+
+
+            ################
+            # Violin PLOT #
+            ###############
+            output$vln_expression_rnai <- renderPlot(jitter_plot_fun(seurat_RNAi,
+                gene = gene_name_rnai,
+                celltypes = celltypes_rnai,
+                summary_stats = summary_stats_rnai,
+                split_conditions = "combined"
+            ))
         }
-      )
-      
-      output$download_vln_expression <- downloadHandler(
-        filename = function() {
-          paste0("celltype_expression_", input$selected_gene, ".pdf")
-        },
-        content = function(file) {
-          p <- jitter_plot_fun(seurat,
-                               gene = input$selected_gene,
-                               celltypes = input$celltypes_vln_plot,
-                               summary_stats = input$summary_stats,
-                               split_conditions = "split"
-          )
-          ggsave(filename = file, width = 7, height = 2.5, plot = p, scale = 1.4)
+
+        # if split condition, generate different plots
+        if (split_condition_rnai) {
+            ###################
+            # ANNOTATION PLOT #
+            ###################
+            output$annotation_plot_rnai <- renderPlot(annotation_plot_fun(seurat_RNAi, dim_red = dim_red_rnai, split_conditions = "ctrl"))
+
+            output$annotation_plot_cph_rnai <- renderPlot(annotation_plot_fun(seurat_RNAi, dim_red = dim_red_rnai, split_conditions = "NotchCphRNAi"))
+
+            output$annotation_plot_notch_rnai <- renderPlot(annotation_plot_fun(seurat_RNAi, dim_red = dim_red_rnai, split_conditions = "NotchRNAi"))
+
+            #################
+            # Feature PLOT #
+            ################
+            output$feature_plot_rnai <- renderPlot(feature_plot_fun(seurat_RNAi,
+                gene = gene_name_rnai,
+                dim_red = dim_red_rnai,
+                order_cells = order_cells_rnai,
+                split_conditions = "ctrl"
+            ))
+
+            output$feature_plot_cph_rnai <- renderPlot(feature_plot_fun(seurat_RNAi,
+                gene = gene_name_rnai,
+                dim_red = dim_red_rnai,
+                order_cells = order_cells_rnai,
+                split_conditions = "NotchCphRNAi"
+            ))
+
+            output$feature_plot_notch_rnai <- renderPlot(feature_plot_fun(seurat_RNAi,
+                gene = gene_name_rnai,
+                dim_red = dim_red_rnai,
+                order_cells = order_cells_rnai,
+                split_conditions = "NotchRNAi"
+            ))
+
+
+            ################
+            # Violin PLOT #
+            ###############
+            output$vln_expression_rnai <- renderPlot(jitter_plot_fun(seurat_RNAi,
+                gene = gene_name_rnai,
+                celltypes = celltypes_rnai,
+                summary_stats = summary_stats_rnai,
+                split_conditions = "split"
+            ))
         }
-      )
-      
-      output$download_annotation_plot_split <- downloadHandler(
-        filename = function() {
-          paste0("annotation_notch_", input$dim_reduction, ".pdf")
-        },
-        content = function(file) {
-          pdf(file, width = 7.31, height = 5.61)
-          print(annotation_plot_fun(seurat,
-                                    dim_red = input$dim_reduction,
-                                    split_conditions = "notch"
-          ))
-          dev.off()
+    })
+
+
+
+
+    #################
+    # DownloadCalls #
+    #################
+    observe({
+        if (!input$split_condition) {
+            output$download_annotation_plot <- downloadHandler(
+                filename = function() {
+                    paste0("annotation_", input$dim_reduction, ".pdf")
+                },
+                content = function(file) {
+                    pdf(file, width = 7.31, height = 5.61)
+                    print(annotation_plot_fun(seurat,
+                        dim_red = input$dim_reduction,
+                        split_conditions = "combined"
+                    ))
+                    dev.off()
+                }
+            )
+
+            output$download_feature_plot <- downloadHandler(
+                filename = function() {
+                    paste0("feature_expression_", input$selected_gene, ".pdf")
+                },
+                content = function(file) {
+                    pdf(file, width = 7.31, height = 5.61)
+                    print(feature_plot_fun(seurat,
+                        gene = input$selected_gene,
+                        dim_red = input$dim_reduction,
+                        order_cells = input$order_cells,
+                        split_conditions = "combined"
+                    ))
+                    dev.off()
+                }
+            )
+
+            output$download_vln_expression <- downloadHandler(
+                filename = function() {
+                    paste0("celltype_expression_", input$selected_gene, ".pdf")
+                },
+                content = function(file) {
+                    p <- jitter_plot_fun(seurat,
+                        gene = input$selected_gene,
+                        celltypes = input$celltypes_vln_plot,
+                        summary_stats = input$summary_stats,
+                        split_conditions = "combined"
+                    )
+                    ggsave(filename = file, width = 7, height = 2.5, plot = p, scale = 1.4)
+                }
+            )
+        } else {
+            output$download_annotation_plot <- downloadHandler(
+                filename = function() {
+                    paste0("annotation_", input$dim_reduction, ".pdf")
+                },
+                content = function(file) {
+                    pdf(file, width = 7.31, height = 5.61)
+                    print(annotation_plot_fun(seurat,
+                        dim_red = input$dim_reduction,
+                        split_conditions = "ctrl"
+                    ))
+                    dev.off()
+                }
+            )
+
+            output$download_feature_plot <- downloadHandler(
+                filename = function() {
+                    paste0("feature_expression_", input$selected_gene, ".pdf")
+                },
+                content = function(file) {
+                    pdf(file, width = 7.31, height = 5.61)
+                    print(feature_plot_fun(seurat,
+                        gene = input$selected_gene,
+                        dim_red = input$dim_reduction,
+                        order_cells = input$order_cells,
+                        split_conditions = "ctrl"
+                    ))
+                    dev.off()
+                }
+            )
+
+            output$download_vln_expression <- downloadHandler(
+                filename = function() {
+                    paste0("celltype_expression_", input$selected_gene, ".pdf")
+                },
+                content = function(file) {
+                    p <- jitter_plot_fun(seurat,
+                        gene = input$selected_gene,
+                        celltypes = input$celltypes_vln_plot,
+                        summary_stats = input$summary_stats,
+                        split_conditions = "split"
+                    )
+                    ggsave(filename = file, width = 7, height = 2.5, plot = p, scale = 1.4)
+                }
+            )
+
+            output$download_annotation_plot_split <- downloadHandler(
+                filename = function() {
+                    paste0("annotation_notch_", input$dim_reduction, ".pdf")
+                },
+                content = function(file) {
+                    pdf(file, width = 7.31, height = 5.61)
+                    print(annotation_plot_fun(seurat,
+                        dim_red = input$dim_reduction,
+                        split_conditions = "notch"
+                    ))
+                    dev.off()
+                }
+            )
+
+            output$download_feature_plot_split <- downloadHandler(
+                filename = function() {
+                    paste0("feature_expression_notch_", input$selected_gene, ".pdf")
+                },
+                content = function(file) {
+                    pdf(file, width = 7.31, height = 5.61)
+                    print(feature_plot_fun(seurat,
+                        gene = input$selected_gene,
+                        dim_red = input$dim_reduction,
+                        order_cells = input$order_cells,
+                        split_conditions = "notch"
+                    ))
+                    dev.off()
+                }
+            )
         }
-      )
-      
-      output$download_feature_plot_split <- downloadHandler(
-        filename = function() {
-          paste0("feature_expression_notch_", input$selected_gene, ".pdf")
-        },
-        content = function(file) {
-          pdf(file, width = 7.31, height = 5.61)
-          print(feature_plot_fun(seurat,
-                                 gene = input$selected_gene,
-                                 dim_red = input$dim_reduction,
-                                 order_cells = input$order_cells,
-                                 split_conditions = "notch"
-          ))
-          dev.off()
-        }
-      )
-    }
-  })
+    })
 }
 
 shinyApp(ui, server)
