@@ -67,9 +67,9 @@ saveRDS(seurat_small, here("data", "filtered_seurat_object.rds"))
 ############################
 # For the RNAi Experiments #
 ############################
-seurat <- readRDS(here("data", "Ctrl_Notch_NotchCphRNAi_integrated_scent.rds"))
-
+seurat <- readRDS(here("data", "RNAi_experiments_integrated.rds"))
 # remove the unkonw cells
+seurat <- seurat[, seurat$celltype_manual != "unk"]
 seurat@meta.data$celltype_manual <- case_when(
     seurat$high_res_annotation == "EEP" ~ "EEP",
     T ~ seurat$celltype_manual
@@ -115,7 +115,7 @@ all(Cells(seurat_small) == rownames(dim_data))
 # add the dimension data to the meta data
 seurat_small@meta.data <- cbind(seurat_small@meta.data, dim_data)
 
-seurat_small$perturbation <- factor(seurat_small$perturbation, levels = c("ctrl", "NotchRNAi", "NotchCphRNAi"))
+seurat_small$perturbation <- factor(seurat_small$perturbation, levels = c("ctrl", "NotchRNAi", "NotchCphRNAi", "CphUp"))
 
 # change the gene name of cph
 rownames(seurat_small@assays$RNA@data) <-

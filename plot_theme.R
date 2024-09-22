@@ -123,3 +123,7 @@ celltype_colors <- setNames(
     c(ISC, EB, EEP, dEC, daEC, aEC, mEC, Copper, LFC, pEC, EE, MT, unk),
     c("ISC", "EB", "EEP", "dEC", "daEC", "aEC", "mEC", "Copper", "LFC", "pEC", "EE", "MT", "unk")
 )
+color_mapping_rnai <- setNames(
+  c("#1492D5", "#a50f15", "#881394", "#00ba38"),
+  c("ctrl", "NotchRNAi", "CphUp", "NotchCphRNAi")
+  )
